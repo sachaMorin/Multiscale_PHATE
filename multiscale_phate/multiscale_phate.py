@@ -340,3 +340,38 @@ class Multiscale_PHATE(object):
             extract = self.NxTs[coarse_cluster_level][unique[1]] == coarse_cluster
             exp = exp[extract]
         return exp
+
+    def get_majority_votes(self, categories, visualization_level):
+        """Map expression from single cell space to Multiscale PHATE embedding
+        ----------
+        expression: array, shape=[n_cells]
+            Expression vector that you want to map to coarse granularity
+        layer: int
+            Coarse granularity
+
+        Returns
+        -------
+        majority_vote : array, shape=[n_points_aggregated]
+            Majority label in each aggregated cluster.
+        ratio : array, shape=[n_points_aggregated]
+            Ratio of the majority label. Handy for setting alpha transparency.
+        """
+        clust_unique = np.unique(np.array(self.NxTs[visualization_level]))
+        loc = []
+        for c in clust_unique:
+            loc.append(np.where(np.array(self.NxTs[visualization_level]) == c)[0])
+
+        exp = []
+        ratio = []
+        for l in loc:
+            # Get the mode
+            values, counts = np.unique(categories[l], return_counts=True)
+            mode_arg = counts.argmax()
+            mode = values[counts.argmax()]
+            exp.append(mode)
+            ratio.append(counts[mode_arg]/counts.sum())
+
+        exp = np.array(exp)
+        ratio = np.array(ratio)
+
+        return exp, ratio
