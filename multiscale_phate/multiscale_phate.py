@@ -303,6 +303,8 @@ class Multiscale_PHATE(object):
     def get_expression(self, expression, visualization_level, coarse_cluster_level=None,
                        coarse_cluster= None, smooth=True, smooth_knn=5):
         """Map expression from single cell space to Multiscale PHATE embedding
+
+        Missing values are ignored when computing the mean.
         ----------
         expression: array, shape=[n_cells]
             Expression vector that you want to map to coarse granularity
@@ -326,10 +328,12 @@ class Multiscale_PHATE(object):
 
         exp = []
         for l in loc:
-            exp.append(np.mean(expression[l]))
+            exp_l = np.array(expression[l])
+            exp_l = exp_l[~np.isnan(exp_l)]
+            exp.append(np.mean(exp_l))
             
         exp = np.array(exp)
-        
+
         if smooth:
             G = graphtools.Graph(self.Xs[visualization_level], knn = smooth_knn,n_jobs=self.n_jobs)
             exp = G.P.toarray()@exp
